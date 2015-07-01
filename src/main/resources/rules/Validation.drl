@@ -1,0 +1,71 @@
+//created on: Jun 30, 2015
+package com.sample.rule
+
+//list any import classes here.
+import org.kie.api.runtime.rule.RuleContext;
+import com.sample.model.*;
+import com.sample.service.*;
+
+
+//declare any global variables here
+global ValidationReport validationReport;
+global ReportFactory reportFactory;
+global BankingInquiryService inquiryService;
+
+import function com.sample.service.ValidationHelper.error;
+import function com.sample.service.ValidationHelper.warning;
+import function com.sample.service.ValidationHelper.yearsPassedSince;
+
+rule "addressRequired"
+	when
+		$m : Customer( address == null )
+	then
+		System.out.println("addressRequired RULE TRIGGERED!");
+		warning(kcontext);
+		//warning(kcontext, $m.getAccounts());
+end
+
+rule "phoneNumberRequired"
+	when
+		Customer( phoneNumber == null || == "" )
+	then
+		System.out.println("phoneNumberRequired RULE TRIGGERED!");
+		error(kcontext);
+end
+
+rule "accountOwnerRequired"
+	when
+		$account : Account( owner == null )
+	then
+		System.out.println("accountOwnerRequired RULE TRIGGERED!");
+		error(kcontext, $account);
+end
+
+rule "accountBalanceAtLeast"
+	when
+		$account : Account( balance < 100 )
+	then
+		System.out.println("accountBalanceAtLeast RULE TRIGGERED!");
+		warning(kcontext, $account);
+end
+
+rule "studentAccountCustomerAgeLessThan"
+	when
+		//Customer( eval (yearsPassedSince(dateOfBirth) >= 27) )
+		Customer( yearsPassedSince(dateOfBirth) >= 27 )
+		$account : Account( type == Account.Type.STUDENT )
+	then
+		System.out.println("studentAccountCustomerAgeLessThan RULE TRIGGERED!");
+		error(kcontext, $account);
+end
+
+rule "accountNumberUnique"
+	when
+		$account : Account(eval(!inquiryService.isAccountNumberUnique($account)))
+	then
+		System.out.println("accountNumberUnique RULE TRIGGERED!");
+		error(kcontext, $account);
+end
+
+
+

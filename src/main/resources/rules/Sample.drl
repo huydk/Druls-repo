@@ -1,0 +1,38 @@
+package com.sample
+ 
+import com.sample.DroolsTest.Message;
+ 
+rule "Hello World"
+
+no-loop
+    when
+        m : Message( status == Message.HELLO, myMessage : message, myStatus : status )
+    then
+    	System.out.println("*********HelloWorld rule triggered!");
+        System.out.println( myMessage );
+        
+        m.setMessage( "Goodbye cruel world" + myStatus);
+        m.setStatus( Message.GOODBYE );
+        
+        // trigger rule "Goodbuy" to run
+        update(m);
+        
+end
+
+rule "GoodBye"
+    when
+        m : Message( status == Message.GOODBYE, $myMessage : message )
+    then
+    	System.out.println("*********Goodbye rule triggered!");
+    	
+    	// declare explicit m : Message to let rule change the variable
+    	m.setMessage(m.getMessage() + " (MODIFIED)");
+        //System.out.println( $myMessage );
+        System.out.println($myMessage + " -> " + m.getMessage());
+        
+        m.setStatus(Message.HELLO);
+        
+        // trigger "Helloworld" rule to run 
+        update(m);
+        
+end

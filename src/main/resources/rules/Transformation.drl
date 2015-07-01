@@ -1,0 +1,48 @@
+//created on: Jul 1, 2015
+package com.sample.rule
+
+//list any import classes here.
+import java.util.*;
+
+import com.sample.service.LegacyBankService;
+import com.sample.model.Address;
+//import com.sample.model.Address.Country;
+
+//declare any global variables here
+global LegacyBankService legacyService;
+
+
+rule findAllCustomers
+dialect "mvel"
+	when
+		$customerMap : Map( )
+			from legacyService.findAllCustomers()
+	then
+		System.out.println("findAllCustomers RULE TRIGGERED!");
+		
+		$customerMap["_type_"] = "Customer"
+		
+		// without dialect mvel, we have to explicitly code like below
+		//$customerMap.put("_type_", "Customer");
+		
+		// insert map in to knowledge session
+		insert( $customerMap )
+		
+		// need strategy to put data in knowledge session in case data become huge
+		
+end
+
+rule findAddress
+dialect "mvel"
+	when
+		$customerMap : Map( this["_type_"] == "Customer" )
+		$addressMap : Map( )
+			from legacyService.findAddressByCustomerId($customerMap["customer_id"] )
+	then
+		System.out.println("findAddress RULE TRIGGERED!");
+		
+		$addressMap["_type_"] = "Address"
+		insert( $addressMap )
+end
+
+
